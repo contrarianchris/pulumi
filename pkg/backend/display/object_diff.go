@@ -1281,7 +1281,7 @@ func (p *propertyPrinter) truncatePropertyString(propertyString string) string {
 
 	lines := strings.Split(propertyString, "\n")
 	if len(lines) > contextLines {
-		return strings.Join(lines[:3], "\n") + "..."
+		return strings.Join(lines[:3], "\n") + "\n..."
 	}
 	return propertyString
 }
