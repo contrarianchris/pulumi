@@ -1,6 +1,21 @@
+// Copyright 2016-2022, Pulumi Corporation.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package stack
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -33,12 +48,14 @@ func (t *testSecretsManager) Decrypter() (config.Decrypter, error) {
 	return t, nil
 }
 
-func (t *testSecretsManager) EncryptValue(plaintext string) (string, error) {
+func (t *testSecretsManager) EncryptValueWithContext(
+	ctx context.Context, plaintext string) (string, error) {
 	t.encryptCalls++
 	return fmt.Sprintf("%v:%v", t.encryptCalls, plaintext), nil
 }
 
-func (t *testSecretsManager) DecryptValue(ciphertext string) (string, error) {
+func (t *testSecretsManager) DecryptValueWithContext(
+	ctx context.Context, ciphertext string) (string, error) {
 	t.decryptCalls++
 	i := strings.Index(ciphertext, ":")
 	if i == -1 {
@@ -47,8 +64,21 @@ func (t *testSecretsManager) DecryptValue(ciphertext string) (string, error) {
 	return ciphertext[i+1:], nil
 }
 
+func (t *testSecretsManager) BulkDecryptWithContext(
+	ctx context.Context, ciphertexts []string) (map[string]string, error) {
+	return config.DefaultBulkDecryptWithContext(ctx, t, ciphertexts)
+}
+
+func (t *testSecretsManager) EncryptValue(plaintext string) (string, error) {
+	return t.EncryptValueWithContext(context.Background(), plaintext)
+}
+
+func (t *testSecretsManager) DecryptValue(ciphertext string) (string, error) {
+	return t.DecryptValueWithContext(context.Background(), ciphertext)
+}
+
 func (t *testSecretsManager) BulkDecrypt(ciphertexts []string) (map[string]string, error) {
-	return config.DefaultBulkDecrypt(t, ciphertexts)
+	return t.BulkDecryptWithContext(context.Background(), ciphertexts)
 }
 
 func deserializeProperty(v interface{}, dec config.Decrypter) (resource.PropertyValue, error) {
@@ -226,14 +256,22 @@ type mapTestDecrypter struct {
 	bulkDecryptCalls int
 }
 
-func (t *mapTestDecrypter) DecryptValue(ciphertext string) (string, error) {
+func (t *mapTestDecrypter) DecryptValueWithContext(ctx context.Context, ciphertext string) (string, error) {
 	t.decryptCalls++
-	return t.d.DecryptValue(ciphertext)
+	return t.d.DecryptValueWithContext(ctx, ciphertext)
+}
+
+func (t *mapTestDecrypter) BulkDecryptWithContext(ctx context.Context, ciphertexts []string) (map[string]string, error) {
+	t.bulkDecryptCalls++
+	return config.DefaultBulkDecryptWithContext(ctx, t.d, ciphertexts)
+}
+
+func (t *mapTestDecrypter) DecryptValue(ciphertext string) (string, error) {
+	return t.DecryptValueWithContext(context.Background(), ciphertext)
 }
 
 func (t *mapTestDecrypter) BulkDecrypt(ciphertexts []string) (map[string]string, error) {
-	t.bulkDecryptCalls++
-	return config.DefaultBulkDecrypt(t.d, ciphertexts)
+	return t.BulkDecryptWithContext(context.Background(), ciphertexts)
 }
 
 func TestMapCrypter(t *testing.T) {
@@ -247,7 +285,7 @@ func TestMapCrypter(t *testing.T) {
 
 	var prov mapTestSecretsProvider
 
-	_, err = DeserializeDeploymentV3(*chk.Latest, &prov)
+	_, err = DeserializeDeploymentV3(context.Background(), *chk.Latest, &prov)
 	require.NoError(t, err)
 
 	d := prov.m.d

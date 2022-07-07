@@ -1,4 +1,4 @@
-// Copyright 2016-2018, Pulumi Corporation.
+// Copyright 2016-2022, Pulumi Corporation.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -335,12 +335,20 @@ type brokenDecrypter struct {
 	ErrorMessage string
 }
 
-func (b brokenDecrypter) DecryptValue(_ string) (string, error) {
+func (b brokenDecrypter) DecryptValueWithContext(ctx context.Context, _ string) (string, error) {
 	return "", fmt.Errorf(b.ErrorMessage)
 }
 
-func (b brokenDecrypter) BulkDecrypt(_ []string) (map[string]string, error) {
+func (b brokenDecrypter) BulkDecryptWithContext(ctx context.Context, _ []string) (map[string]string, error) {
 	return nil, fmt.Errorf(b.ErrorMessage)
+}
+
+func (b brokenDecrypter) DecryptValue(v string) (string, error) {
+	return b.DecryptValueWithContext(context.Background(), v)
+}
+
+func (b brokenDecrypter) BulkDecrypt(vs []string) (map[string]string, error) {
+	return b.BulkDecryptWithContext(context.Background(), vs)
 }
 
 // Tests that the engine presents a reasonable error message when a decrypter fails to decrypt a config value.
