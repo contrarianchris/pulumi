@@ -220,7 +220,8 @@ func (d passThroughDecrypter) DecryptValueWithContext(ctx context.Context, ciphe
 	return ciphertext, nil
 }
 
-func (d passThroughDecrypter) BulkDecryptWithContext(ctx context.Context, ciphertexts []string) (map[string]string, error) {
+func (d passThroughDecrypter) BulkDecryptWithContext(
+	ctx context.Context, ciphertexts []string) (map[string]string, error) {
 	return DefaultBulkDecryptWithContext(ctx, d, ciphertexts)
 }
 

@@ -109,7 +109,8 @@ func (t *trackingDecrypter) DecryptValueWithContext(ctx context.Context, ciphert
 	return v, nil
 }
 
-func (t *trackingDecrypter) BulkDecryptWithContext(ctx context.Context, ciphertexts []string) (map[string]string, error) {
+func (t *trackingDecrypter) BulkDecryptWithContext(
+	ctx context.Context, ciphertexts []string) (map[string]string, error) {
 	return DefaultBulkDecryptWithContext(ctx, t, ciphertexts)
 }
 
@@ -335,7 +336,8 @@ func DefaultBulkDecrypt(decrypter Decrypter, ciphertexts []string) (map[string]s
 	return DefaultBulkDecryptWithContext(context.Background(), decrypter, ciphertexts)
 }
 
-func DefaultBulkDecryptWithContext(ctx context.Context, decrypter Decrypter, ciphertexts []string) (map[string]string, error) {
+func DefaultBulkDecryptWithContext(ctx context.Context,
+	decrypter Decrypter, ciphertexts []string) (map[string]string, error) {
 	if len(ciphertexts) == 0 {
 		return nil, nil
 	}
