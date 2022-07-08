@@ -261,7 +261,8 @@ func (t *mapTestDecrypter) DecryptValueWithContext(ctx context.Context, cipherte
 	return t.d.DecryptValueWithContext(ctx, ciphertext)
 }
 
-func (t *mapTestDecrypter) BulkDecryptWithContext(ctx context.Context, ciphertexts []string) (map[string]string, error) {
+func (t *mapTestDecrypter) BulkDecryptWithContext(
+	ctx context.Context, ciphertexts []string) (map[string]string, error) {
 	t.bulkDecryptCalls++
 	return config.DefaultBulkDecryptWithContext(ctx, t.d, ciphertexts)
 }
